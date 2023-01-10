@@ -2,6 +2,7 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import  pickle
 
 def app():
     
@@ -26,7 +27,7 @@ def app():
         if st.session_state.tracking_analysis_env.list_filenames != None:
             with c2:
                 button_get_light = st.button("Check Light")
-
+        st.text(st.session_state.tracking_analysis_env.list_filenames)
         if st.session_state.tracking_analysis_env.light_on != None:
             with c3:
                 button_get_heatmap_df = st.button("Run")
