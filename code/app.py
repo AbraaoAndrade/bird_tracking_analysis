@@ -10,11 +10,21 @@ def app():
         st.session_state.layout = "wide"
         st.experimental_rerun()
 
-    st.session_state.checkbox_status = st.checkbox("Data Already Processed")
+    st.session_state.checkbox_data_alredy_processed = st.checkbox("Data Already Processed")
 
-    if not st.session_state.checkbox_status:
+    
+
+    if not st.session_state.checkbox_data_alredy_processed:
+
         # 1. interface ------------------------------------------------------------------------------------------------
-        st.session_state.tracking_analysis_env.path = st.text_input("File Path") # D:\IC\VPA\Arquivos de Registro\Tracking\Sozinho\controle\Or328
+
+        st.session_state.checkbox_web_app = st.checkbox("Web App")
+
+        if st.session_state.checkbox_web_app:
+            st.session_state.tracking_analysis_env.uploaded_files = st.file_uploader("Heatmap File (parquet)", accept_multiple_files=True)
+
+        else:
+            st.session_state.tracking_analysis_env.path = st.text_input("File Path") # D:\IC\VPA\Arquivos de Registro\Tracking\Sozinho\controle\Or328
 
         st.session_state.tracking_analysis_env.progress_bar = st.progress(0)
 
@@ -23,11 +33,17 @@ def app():
         if st.session_state.tracking_analysis_env.path != None:
             with c1:
                 button_submit = st.button("Submit Files")
-        
+        # st.text(st.session_state.tracking_analysis_env.list_filenames) ###############################
+
+        # if st.session_state.tracking_analysis_env.list_filenames != None:
+        #     df = pd.read_csv(st.session_state.tracking_analysis_env.list_filenames[0])
+        #     st.dataframe(df.head())
+
+        # st.text(st.session_state.tracking_analysis_env.light_on) ###############################
         if st.session_state.tracking_analysis_env.list_filenames != None:
             with c2:
                 button_get_light = st.button("Check Light")
-        st.text(st.session_state.tracking_analysis_env.list_filenames)
+        
         if st.session_state.tracking_analysis_env.light_on != None:
             with c3:
                 button_get_heatmap_df = st.button("Run")

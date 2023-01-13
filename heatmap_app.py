@@ -8,8 +8,11 @@ from about import *
 
 from st_switcher import st_switcher
 
-if 'checkbox_status' not in st.session_state:
-    st.session_state['checkbox_status'] = False
+if 'checkbox_data_alredy_processed' not in st.session_state:
+    st.session_state['checkbox_data_alredy_processed'] = False
+
+if 'checkbox_web_app' not in st.session_state:
+    st.session_state['checkbox_web_app'] = False
 
 if 'tracking_analysis_env' not in st.session_state:
     st.session_state['tracking_analysis_env'] = tracking_analysis()

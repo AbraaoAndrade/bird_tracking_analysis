@@ -1,3 +1,4 @@
+import streamlit as st
 import numpy as np
 import pandas as pd
 import tqdm as tq
@@ -11,6 +12,7 @@ class tracking_analysis:
     def __init__(self):
 
         self.path = None
+        self.uploaded_files = None
         self.list_filenames = None 
         self.animal = None
         self.progress_bar = None
@@ -35,18 +37,37 @@ class tracking_analysis:
         return monthNUM
 
     def get_dir_list(self):
-        list_folders = sorted(glob.glob(self.path + "/*/"))
-        list_filenames = np.array([])
-        
-        for i, folder in enumerate(list_folders):
-            filenames = glob.glob(os.path.join(folder, "*.csv"))
-            self.animal = filenames[1][-30:-25]
-            
-            list_filenames = np.hstack([list_filenames, filenames])
-            
-            self.progress_bar.progress((i+1)/len(list_folders))
 
-        self.list_filenames = sorted(list_filenames)
+        if st.session_state.checkbox_web_app:
+
+            files = []
+            
+            for i, file in enumerate(self.uploaded_files):
+                files.append([file.name, file])
+
+                self.progress_bar.progress((i+1)/len(self.uploaded_files))
+
+            files_df = pd.DataFrame(files, columns=["filename", "uploaded_file"])
+
+            print(files_df)
+            self.animal = file.name[-30:-25]
+            self.list_filenames = list(files_df.sort_values("filename")["uploaded_file"].values)
+
+        else:
+            
+            list_folders = sorted(glob.glob(self.path + "/*/"))
+            list_filenames = np.array([])
+            
+            for i, folder in enumerate(list_folders):
+                filenames = glob.glob(os.path.join(folder, "*.csv"))
+                self.animal = filenames[1][-30:-25]
+                
+                list_filenames = np.hstack([list_filenames, filenames])
+                
+                self.progress_bar.progress((i+1)/len(list_folders))
+
+            self.list_filenames = sorted(list_filenames)
+
 
     def checking_light(self):
         # 0 declarando variavies -------------------------------------------------------------------------------------------
@@ -54,12 +75,13 @@ class tracking_analysis:
         luz = True
         self.light_on = []
 
-        for k,j in enumerate(self.list_filenames): ## for geral que irá caminhar por cada filename
+        for k, filename in enumerate(self.list_filenames): ## for geral que irá caminhar por cada filename
             
             # 1 lendo filename ---------------------------------------------------------------------------------------------
-            filename = j
             dataSet = pd.read_csv(filename,names = ['a','b','c','d','e','f','g']) ## lendo filename
             dataSet_np = np.array(dataSet) ## transformando em numpy array para ganhar velocidade de processamento
+            if st.session_state.checkbox_web_app:
+                filename = filename.name
             # --------------------------------------------------------------------------------------------------------------
             
             # 2 separando os dados de tempo e coordenada -------------------------------------------------------------------
@@ -92,6 +114,7 @@ class tracking_analysis:
                 # ----------------------------------------------------------------------------------------------------------
        
             self.progress_bar.progress((k+1)/len(self.list_filenames))
+        
         
 
 
@@ -131,12 +154,14 @@ class tracking_analysis:
         index_first_bool = True
         index_first = 0
         index_last = 0
-
+        
         for k, filename in enumerate(tq.tqdm(self.list_filenames)): ## for geral que irá caminhar por cada filename
             
             # 1 lendo filename ---------------------------------------------------------------------------------------------
             dataSet = pd.read_csv(filename,names = ['update_rate','coord_x','coord_y','x','time_h','time_m','time_s']) ## lendo filename
             dataSet_np = np.array(dataSet) ## transformando em numpy array para ganhar velocidade de processamento
+            if st.session_state.checkbox_web_app:
+                filename = filename.name
             # --------------------------------------------------------------------------------------------------------------
             
             # 2 separando os dados de tempo e coordenada -------------------------------------------------------------------
