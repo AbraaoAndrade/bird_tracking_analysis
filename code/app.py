@@ -17,8 +17,7 @@ def app():
     if not st.session_state.checkbox_data_alredy_processed:
 
         # 1. interface ------------------------------------------------------------------------------------------------
-        st.text("debug")
-        
+                
         st.session_state.checkbox_web_app = st.checkbox("Web App")
 
         if st.session_state.checkbox_web_app:
