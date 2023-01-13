@@ -40,14 +40,14 @@ class tracking_analysis:
 
         if st.session_state.checkbox_web_app:
 
-            files = []
+            files_list = []
             
             for i, file in enumerate(self.uploaded_files):
-                files.append([file.name, file])
+                files_list.append([file.name, file])
 
                 self.progress_bar.progress((i+1)/len(self.uploaded_files))
 
-            files_df = pd.DataFrame(files, columns=["filename", "uploaded_file"])
+            files_df = pd.DataFrame(files_list, columns=["filename", "uploaded_file"])
 
             print(files_df)
             self.animal = file.name[-30:-25]
