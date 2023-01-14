@@ -33,7 +33,7 @@ def app():
         if st.session_state.tracking_analysis_env.path != None:
             with c1:
                 button_submit = st.button("Submit Files")
-        # st.text(st.session_state.tracking_analysis_env.list_filenames) ###############################
+        st.text(st.session_state.tracking_analysis_env.list_filenames) ###############################
 
         # if st.session_state.tracking_analysis_env.list_filenames != None:
         #     df = pd.read_csv(st.session_state.tracking_analysis_env.list_filenames[0])

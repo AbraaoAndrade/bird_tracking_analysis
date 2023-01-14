@@ -43,15 +43,19 @@ class tracking_analysis:
             files_list = []
             
             for i, file in enumerate(self.uploaded_files):
-                files_list.append([file.name, file])
+                ano = int(file.name[len(file.name)-17:len(file.name)-13])
+                mes = int(self.strtomonth(file.name[len(file.name)-21:len(file.name)-18]))
+                dia = int(file.name[len(file.name)-24:len(file.name)-22])
+                hora = datetime.strptime(file.name[len(file.name)-12:len(file.name)-4], "%H_%M_%S").time()
 
+                files_list.append([ano, mes, dia, hora, file])
+        
                 self.progress_bar.progress((i+1)/len(self.uploaded_files))
 
-            files_df = pd.DataFrame(files_list, columns=["filename", "uploaded_file"])
+            files_df = pd.DataFrame(files_list, columns=["year", "month", "day", "hour", "uploaded_file"])
 
-            print(files_df)
             self.animal = file.name[-30:-25]
-            self.list_filenames = list(files_df.sort_values("filename")["uploaded_file"].values)
+            self.list_filenames = list(files_df.sort_values(["year", "month", "day", "hour"], ascending=True)["uploaded_file"].values)
 
         else:
             
@@ -198,7 +202,6 @@ class tracking_analysis:
                     else:
                         mes_check = mes
                 # ==========================================================================================================
-                
                 time = datetime(ano,mes,dia,hora,minu,seg,mics)
                 
                 # 4 checando ligar/desligar da luz -------------------------------------------------------------------------
