@@ -12,11 +12,12 @@ class tracking_analysis:
     def __init__(self):
 
         self.path = None
+        self.filter_file = pd.DataFrame([])
         self.uploaded_files = None
         self.list_filenames = None 
         self.animal = None
         self.progress_bar = None
-        self.light_on = [datetime(2019, 9, 28, 5, 48, 4, 10), datetime(2019, 9, 29, 5, 48, 5, 82), datetime(2019, 9, 30, 5, 47, 48, 53), datetime(2019, 10, 1, 5, 47, 59, 49), datetime(2019, 10, 2, 5, 47, 46, 7), datetime(2019, 10, 3, 5, 47, 56, 95)]
+        self.light_on = None # [datetime(2019, 9, 28, 5, 48, 4, 10), datetime(2019, 9, 29, 5, 48, 5, 82), datetime(2019, 9, 30, 5, 47, 48, 53), datetime(2019, 10, 1, 5, 47, 59, 49), datetime(2019, 10, 2, 5, 47, 46, 7), datetime(2019, 10, 3, 5, 47, 56, 95)]
         self.dataSet_all = pd.DataFrame([])
         self.label_dict = {}
 
@@ -159,10 +160,15 @@ class tracking_analysis:
         index_first = 0
         index_last = 0
         
+        count_filter = 0
+        list_filter = []
+
         for k, filename in enumerate(tq.tqdm(self.list_filenames)): ## for geral que irá caminhar por cada filename
             
             # 1 lendo filename ---------------------------------------------------------------------------------------------
             dataSet = pd.read_csv(filename,names = ['update_rate','coord_x','coord_y','x','time_h','time_m','time_s']) ## lendo filename
+            # filtering [0,0] coords
+            dataSet = dataSet.loc[~(dataSet[['coord_x','coord_y']]==0).all(axis=1)]
             dataSet_np = np.array(dataSet) ## transformando em numpy array para ganhar velocidade de processamento
             if st.session_state.checkbox_web_app:
                 filename = filename.name
@@ -267,9 +273,17 @@ class tracking_analysis:
                             last_day = True
                     
                     index_last = i+1
-            
+
+                # 4 filtro -------------------------------------------------------------------------
+                    if not self.filter_file.empty:
+                        if self.filter_file["mask"][count_filter]:
+                            list_filter.append(False)
+                        else:
+                            list_filter.append(True)
+                count_filter += 1
+
             if not last_day:
-                self.dataSet_all = pd.concat([self.dataSet_all, dataSet.iloc[index_first:index_last,:][["coord_x", "coord_y"]].astype('int32')])
+                self.dataSet_all = pd.concat([self.dataSet_all, dataSet.iloc[index_first:index_last,:][["coord_x", "coord_y"]]])
             
             index_first_bool = True
             index_first = 0
@@ -278,6 +292,9 @@ class tracking_analysis:
             self.progress_bar.progress((k+1)/len(self.list_filenames))
 
         groups_dict = {"day":np.array(list_day).astype(int), "3h":np.array(list3h).astype(int), "5h":np.array(list5h).astype(int), "7h30m":np.array(list7h30m).astype(int)}
+        if not self.filter_file.empty:
+            groups_dict["filter"] = list_filter
+        print(len(list_filter), len(list_day))
         for group in tq.tqdm(groups_dict):
             self.dataSet_all[group] = groups_dict[group]
 

@@ -21,20 +21,27 @@ def app():
         st.session_state.checkbox_web_app = st.checkbox("Web App")
 
         if st.session_state.checkbox_web_app:
-            st.session_state.tracking_analysis_env.uploaded_files = st.file_uploader("Heatmap File (parquet)", accept_multiple_files=True)
+            st.session_state.tracking_analysis_env.uploaded_files = st.file_uploader("Tracking Files", type="csv", accept_multiple_files=True)
 
         else:
             st.session_state.tracking_analysis_env.path = st.text_input("File Path") # D:\IC\VPA\Arquivos de Registro\Tracking\Sozinho\controle\Or328
 
-        st.session_state.tracking_analysis_env.progress_bar = st.progress(0)
 
+        filter_file = st.file_uploader("Filter File", type="csv")
+        if (st.session_state.tracking_analysis_env.filter_file.empty) and (filter_file is not None):
+            st.session_state.tracking_analysis_env.filter_file = pd.read_csv(filter_file)
+
+        st.session_state.tracking_analysis_env.progress_bar = st.progress(0)
+        
         c1, c2, c3, c4, c5 = st.columns([2.4, 2.3, 1.3, 4, 16])
 
-        if st.session_state.tracking_analysis_env.path != None:
+        if st.session_state.tracking_analysis_env.path != "":
             with c1:
                 button_submit = st.button("Submit Files")
-        st.text(st.session_state.tracking_analysis_env.list_filenames) ###############################
-
+        # st.text(st.session_state.tracking_analysis_env.list_filenames) ###############################
+        # st.text((st.session_state.tracking_analysis_env.filter_file.empty) )
+        # st.text( (filter_file is not None))
+        # st.dataframe(st.session_state.tracking_analysis_env.filter_file.head())
         # if st.session_state.tracking_analysis_env.list_filenames != None:
         #     df = pd.read_csv(st.session_state.tracking_analysis_env.list_filenames[0])
         #     st.dataframe(df.head())
@@ -61,7 +68,7 @@ def app():
                                 file_name="label_dict_{}.pkl".format(st.session_state.tracking_analysis_env.animal))
                 
         # 2. processamento --------------------------------------------------------------------------------------------
-        if st.session_state.tracking_analysis_env.path != None:
+        if st.session_state.tracking_analysis_env.path != "":
             if button_submit:
                 st.session_state.tracking_analysis_env.get_dir_list()
                 st.experimental_rerun()
@@ -78,9 +85,10 @@ def app():
 
     else:
         # 1. interface ------------------------------------------------------------------------------------------------
-        heatmap_file = st.file_uploader("Heatmap File (parquet)")
-        dict_file = st.file_uploader("Labels File (dict)")
-        filter_file = st.file_uploader("Filter File (csv)")
+        st.session_state.tracking_analysis_env.animal = st.text_input("Animal name")
+        heatmap_file = st.file_uploader("Heatmap File", type="parquet")
+        dict_file = st.file_uploader("Labels File", type="pkl")
+        # filter_file = st.file_uploader("Filter File", type="csv")
         
         # 2. processamento --------------------------------------------------------------------------------------------
         if heatmap_file is not None:
@@ -113,20 +121,13 @@ def app():
         with c2:
             checkbox_transparent_bg = st.checkbox("Transparent Background")
 
-        c1, c2 = st.columns([1, 20])
+        c1, c2_img_down = st.columns([1, 20])
         with c1:
             button_plot = st.button("Plot")
-        with c2:
-            fn = f'heatmap{st.session_state.tracking_analysis_env.animal}_{plot_interval}_{plot_step}.png'
-            st.session_state.fig.savefig(fn, transparent=checkbox_transparent_bg)
-            with open(fn, "rb") as img:
-                st.download_button(label="Download image",
-                                data=img,
-                                file_name=fn)
 
         
     # 4. resultados --------------------------------------------------------------------------------------------
-    if not  st.session_state.tracking_analysis_env.dataSet_all.empty:
+    if (not  st.session_state.tracking_analysis_env.dataSet_all.empty) and (st.session_state.tracking_analysis_env.animal != ""):
         # st.markdown("### Resultados por Região")
 
         if button_plot:
@@ -141,6 +142,13 @@ def app():
 
             values = st.session_state.tracking_analysis_env.dataSet_all[plot_interval].dropna().unique()
 
+            if checkbox_filter:
+                df_to_plot = st.session_state.tracking_analysis_env.dataSet_all.query("filter == True")
+                print("filter -----------------------------------------------")
+            else:
+                df_to_plot = st.session_state.tracking_analysis_env.dataSet_all
+            
+            
             if plot_interval == "3h":
                 j_subplot = 5
                 i_subplot = np.ceil(len(values) / j_subplot)
@@ -166,8 +174,8 @@ def app():
             ax.spines['left'].set_visible(False)
             ax.spines['bottom'].set_visible(False)
             for i, value in enumerate(values):
-                df = st.session_state.tracking_analysis_env.dataSet_all[st.session_state.tracking_analysis_env.dataSet_all["7h30m"] == value][["coord_x_cat", "coord_y_cat"]].dropna()
-
+                df = df_to_plot[df_to_plot[plot_interval] == value][["coord_x_cat", "coord_y_cat"]].dropna()
+            
                 ax = st.session_state.fig.add_subplot(int(i_subplot),int(j_subplot),i+1)
                 ax.hist2d(df["coord_x_cat"], df["coord_y_cat"], bins=[x_cats, y_cats], cmap="turbo")
                 ax.set_title(st.session_state.tracking_analysis_env.label_dict[plot_interval][value])
@@ -180,4 +188,14 @@ def app():
                 ax.spines['left'].set_visible(False)
                 ax.spines['bottom'].set_visible(False)
         
+        with c2_img_down:
+            fn = f"heatmap_{st.session_state.tracking_analysis_env.animal.replace(' ', '').lower()}_{plot_interval}_{plot_step}{'_filtered' if checkbox_filter else ''}.png"
+            st.session_state.fig.savefig(fn, transparent=checkbox_transparent_bg)
+            with open(fn, "rb") as img:
+                st.download_button(label="Download image",
+                                data=img,
+                                file_name=fn)
+
         st.pyplot(st.session_state.fig)
+
+        
