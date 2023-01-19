@@ -6,6 +6,308 @@ from datetime import datetime,timedelta
 from colorama import Fore, Back
 import glob 
 import os
+import tqdm.notebook as tq
+
+class preprocess_tracking:
+
+    def __init__(self, path, animal):
+
+        self.path = path 
+        self.animal = animal
+        
+    def strtomonth(self, mes):
+      if mes == "Jan":  monthNUM = 1;
+      elif mes == "Feb":  monthNUM = 2;
+      elif mes == "Mar":  monthNUM = 3;
+      elif mes == "Apr":  monthNUM = 4;
+      elif mes == "May":  monthNUM = 5;
+      elif mes == "Jun":  monthNUM = 6;
+      elif mes == "Jul":  monthNUM = 7;
+      elif mes == "Aug":  monthNUM = 8;
+      elif mes == "Sep":  monthNUM = 9;
+      elif mes == "Oct": monthNUM = 10;
+      elif mes == "Nov": monthNUM = 11;
+      elif mes == "Dec": monthNUM = 12;
+      else: print('invalid');
+      return monthNUM
+
+    # A. Generating the list of directories that will be read to account for the distance traveled
+    def load_files(self, return_results=False, print_results=False):
+        list_folders = sorted(glob.glob(self.path + "/*/"))
+
+        list_filenames = np.array([])
+        for folder in tq.tqdm(list_folders):
+            filenames = glob.glob(os.path.join(folder, "*.csv"))
+
+            list_filenames = np.hstack([list_filenames, filenames])
+
+        self.list_filenames = sorted(list_filenames)
+        
+        if print_results:
+            print("\n".join(self.list_filenames))
+            
+        if return_results:
+            return self.list_filenames
+
+    # B. Checking light
+    def get_light(self, return_results=False, print_results=False):
+        # 0 declarando variavies -------------------------------------------------------------------------------------------
+        coord = np.array([])
+        luz = True
+        self.light_on = []
+
+        for k,j in enumerate(tq.tqdm(self.list_filenames)): ## for geral que irá caminhar por cada filename
+
+            # 1 lendo filename ---------------------------------------------------------------------------------------------
+            filename = j
+            dataSet = pd.read_csv(filename,names = ['a','b','c','d','e','f','g']) ## lendo filename
+            dataSet_np = np.array(dataSet) ## transformando em numpy array para ganhar velocidade de processamento
+            # --------------------------------------------------------------------------------------------------------------
+
+            # 2 separando os dados de tempo e coordenada -------------------------------------------------------------------
+            timet = dataSet_np[:,4:] 
+            coord = dataSet_np[:,1:3]
+            # --------------------------------------------------------------------------------------------------------------
+
+            for i in range(len(timet)): ## for que irá caminhar por cada linha da tabela lida
+
+                # 3 extraindo os dados de tempo ----------------------------------------------------------------------------
+                ano = int(filename[len(filename)-17:len(filename)-13])
+                mes = int(self.strtomonth(filename[len(filename)-21:len(filename)-18]))
+                dia = int(filename[len(filename)-24:len(filename)-22])
+                hora = int(timet[i,0])
+                minu = int(timet[i,1])
+                seg = int(timet[i,2])
+                mics = int(100*(dataSet_np[i,6]%1))
+                # ---------------------------------------------------------------------------------------------------------- 
+
+                # 4 checando ligar/desligar da luz -------------------------------------------------------------------------
+                if coord[i,0] == 160.5 and coord[i,1] == 120.5 and luz == True:
+                    if print_results:
+                        print(Back.BLACK + Fore.WHITE + " OFF →", datetime(ano,mes,dia,hora,minu,seg), "", filename, "")
+                    luz = False
+
+                elif coord[i,0] != 160.5 and coord[i,1] != 120.5 and luz == False:
+                    if print_results:
+                        print(Back.WHITE + Fore.BLACK + " ON  →", datetime(ano,mes,dia,hora,minu,seg), "", filename, "")
+
+                    self.light_on.append(datetime(ano,mes,dia,hora,minu,seg,mics))
+                    luz = True
+                # ----------------------------------------------------------------------------------------------------------
+  
+        if return_results:
+            return self.light_on
+
+    # C. Distance calculator
+    def get_distance(self, interval, filtering_mask=pd.DataFrame([]), print_results=True):
+
+        # 0 declarando variavies --------------------------------------------------------------------------------------------
+        interval = timedelta(minutes=int(interval[3:]), hours=int(interval[:2]))
+
+        quinze_horas = datetime(2019,8,14,21,0,0) - datetime(2019,8,14,6,0,0,0)
+
+        coord = np.array([])
+        dist_cont = 0
+        dist_interval = []
+        times_axis = []
+        dia_check = 0 
+        mes_check = 0
+        first_loop = True
+        begin = False
+        on = 0
+        timefill = 0
+
+        count_geral = 0
+        # -------------------------------------------------------------------------------------------------------------------
+
+        for k,j in enumerate(tq.tqdm(self.list_filenames)): ## for geral que irá caminhar por cada filename
+
+            # 1 lendo filename ----------------------------------------------------------------------------------------------
+            filename = j
+            dataSet = pd.read_csv(filename,names = ['a','b','c','d','e','f','g']) ## lendo filename
+                # 1.1 resolvendo problemas ==================================================================================
+                # Problema: quando o tracking não encontra o animal ele registra a coordenada como (0,0). Assim,  
+                # não podemos calcular essa falsa distancia percorrida;
+                # Resolução: se a coordenada for zero mantemos a = b até q o tracking volte a funcionar (coordenada 
+                # deixa de ser 0), quando b receberá a nova coordenada real ignorando todo o periodo zerado
+            dataSet = dataSet.loc[~(dataSet[['b','c']]==0).all(axis=1)] 
+                # ===========================================================================================================
+            dataSet_np = np.array(dataSet) ## transformando em numpy array para ganhar velocidade de processamento
+            # ---------------------------------------------------------------------------------------------------------------
+
+
+            # 2 separando os dados de tempo e coordenada --------------------------------------------------------------------
+            timet = dataSet_np[:,4:] 
+            dT = dataSet_np[:,3] 
+            coord = dataSet_np[:,1:3]
+            # ---------------------------------------------------------------------------------------------------------------
+
+
+            for i in range(len(timet)): ## for que irá caminhar por cada linha da tabela lida
+
+                # 3 extraindo os dados de tempo -----------------------------------------------------------------------------
+                ano = int(filename[len(filename)-17:len(filename)-13])
+                mes = int(self.strtomonth(filename[len(filename)-21:len(filename)-18]))
+                dia = int(filename[len(filename)-24:len(filename)-22])
+                hora = int(timet[i,0])
+                minu = int(timet[i,1])
+                seg = int(timet[i,2])
+                mics = int(100*(dataSet_np[i,6]%1))
+                # -----------------------------------------------------------------------------------------------------------
+
+
+                # 4 Identificando arquivos com problemas --------------------------------------------------------------------
+                time3_check = datetime(ano,mes,dia,hora,minu,seg,mics)
+                dois_minutos = datetime(2019,8,14,12,2,0,0) - datetime(2019,8,14,12,0,0,0)
+                um_dia = datetime(2019,8,15,12,0,0,0) - datetime(2019,8,14,12,0,0,0)
+                if begin == True:
+                    if print_results:
+                        if (time3_check - time2) > dois_minutos and (time3_check - time2) < um_dia:
+                            print(Style.RESET_ALL + '-----------------------------------------------------')
+                            print('talvez tenhamos um problema no arquivo: ', filename)
+                            print('')
+                            if (time3_check - time2) > dois_minutos:
+                                print('O tempo de atualização de coordenadas foi mt alto:', time3_check - time2)
+                            print('')
+                            print('tempo de atualização: t =', time2,';t+1 = ', time3_check)
+                            print('-----------------------------------------------------')
+                # -----------------------------------------------------------------------------------------------------------
+
+
+                # 5 resolvendo problemas ====================================================================================
+                # PROBLEMA : quando temos arquivos q começam em um dia e terminam no outro as primeiras linhas receberão er-
+                # roneamente os dados de dia e mês do dia seguinte; 
+                # OBS.: os dados de ano, mes e dia são retirados do nome do arquivo que são nomeados com a data do final do
+                # intervalo de registro (17 minutos).
+
+                if dia_check != dia:
+                    if hora == 23:
+                        dia = dia_check
+                    else:
+                        dia_check = dia
+
+                if mes_check != mes:
+                    if hora == 23:
+                        mes = mes_check
+                    else:
+                        mes_check = mes
+                # ==========================================================================================================
+                if on < len(self.light_on):
+                    if datetime(ano,mes,dia,hora,minu,seg,mics) >= self.light_on[on]: ## checando a hora inicial (light on) 
+
+
+                        # 6 preenchendo variaveis no primeiro loop -------------------------------------------------------------
+                        if begin == False: 
+                            # 6.1 preenchendo os pontos vetoriais --------------------------------------------------------------
+                            b = coord[i,:]
+                            a = coord[i,:]
+
+                            # 6.2 preenchendo os datetime ----------------------------------------------------------------------  
+                            if print_results:
+                                print(Back.BLACK + Fore.WHITE + "==================== dia {} ====================".format(on+1))
+                                print(Back.WHITE + Fore.BLACK + "         light on → {}        ".format(datetime(ano,mes,dia,hora,minu,seg)))
+                            time1 = datetime(ano,mes,dia,hora,minu,seg,mics)
+                            dia_check = dia
+                            mes_check = mes
+                            begin = True
+                        # ------------------------------------------------------------------------------------------------------
+
+
+                        if begin == True: ## pós o primeiro loop
+
+
+                            # 7 preenchendo os pontos vetoriais -----------------------------------------------------------------
+                            a = b
+                            b = coord[i,:]
+
+                            if not filtering_mask.empty:
+                                # 7.1 resolvendo problemas =======================================================================
+                                    # PROBLEMA: quando o tracking não encontra o animal e tem alguma mancha no contraste ele registra a
+                                    # coordenada da mancha e não podemos calcular essa falsa distancia percorrida;
+                                    # RESOLUÇÃO: se a coordenada corresponder aos pontos marcados na filtragem a nova coordenada é ignorada,
+                                    # portanto, "b" recebe "a" para que essa distancia n seja contabilizada.
+                                    # INCONSISTENCIAS:
+
+                                if filtering_mask.loc[count_geral, "mask"]: 
+                                    b = a
+                                # =================================================================================================
+                            #------------------------------------------------------------------------------------------------------
+
+
+                            # 8 preenchendo os datetime ---------------------------------------------------------------------------
+                            time2 = datetime(ano,mes,dia,hora,minu,seg,mics)
+                            #------------------------------------------------------------------------------------------------------
+
+
+                            # 9 calculando a distancia percorrida -----------------------------------------------------------------
+                            vecR = b-a                                   
+                            dist_cont += np.sqrt(sum(np.power(vecR,2))) 
+                            # -----------------------------------------------------------------------------------------------------
+
+
+                            # 10 gerando tabela de distancia por intervalo --------------------------------------------------------
+                            if time2 - time1 >= interval: 
+                                if ((time2.minute == self.light_on[on].minute) or (time2.minute == (self.light_on[on] + interval).minute)) and \
+                                   (round((time2 - time1).total_seconds()/60) <= round(interval.total_seconds()/60)):
+                                    if print_results:
+                                        print(Back.GREEN + Fore.WHITE + " ✔ " + Style.RESET_ALL, datetime(ano,mes,dia,hora,minu,seg), int(dist_cont))
+                                else:
+                                    if print_results:
+                                        print(Back.RED + Fore.WHITE + " ✖ " + Style.RESET_ALL, datetime(ano,mes,dia,hora,minu,seg), int(dist_cont))
+
+                                dist_interval.append(dist_cont)
+
+                                time1 = time2
+                                times_axis.append(time1)
+                                dist_cont = 0
+                            # ----------------------------------------------------------------------------------------------------- 
+
+                            if time2 - self.light_on[on] >= quinze_horas:
+                                begin = False
+                                dist_cont = 0
+
+                                # 11 preenchendo os zeros da noite ----------------------------------------------------------------
+                                timefill = time2
+                                for fill in range(19):
+                                    dist_interval.append(0)                        
+                                    times_axis.append(timefill)
+                                    
+                                    if print_results:
+                                        print(Back.WHITE + Fore.BLACK + " ▣ " + Style.RESET_ALL, timefill.replace(microsecond=0), 0)
+
+
+                                    timefill = timefill + interval
+                                # -------------------------------------------------------------------------------------------------
+
+                                on += 1
+
+                count_geral += 1
+
+
+        dist_interval_df = pd.DataFrame(np.stack([times_axis, dist_interval], axis = 1), columns = ["time", "dist"])
+        
+        return dist_interval_df
+    
+    def concat_all_files(self):
+        coord_total = []
+        timet_total = []
+        for idx, filename in enumerate(tq.tqdm(self.list_filenames)):
+            dataSet = pd.read_csv(filename,names = ['a','b','c','d','e','f','g']) 
+            # filtering [0,0] coords
+            dataSet = dataSet.loc[~(dataSet[['b','c']]==0).all(axis=1)]
+            dataSet_np = np.array(dataSet) 
+
+            coord = dataSet_np[:,1:3]
+            timet = dataSet_np[:,3] 
+
+            if idx == 0:
+                coord_total = coord
+                timet_total = timet
+            else:
+                coord_total = np.concatenate([coord_total, coord], axis = 0)
+                timet_total = np.concatenate([timet_total, timet], axis = 0)
+
+        return coord_total, timet_total
 
 class tracking_analysis:
 
@@ -299,3 +601,28 @@ class tracking_analysis:
             self.dataSet_all[group] = groups_dict[group]
 
         self.label_dict = {"3h":dict_3h, "5h":dict_5h, "7h30m":dict_7h30m, "day":dict_day}
+
+def send_email(sender, password, receiver, smtp_server, smtp_port, email_message, subject, attachment=None):
+    import smtplib
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
+    from email.header import Header
+    from email.mime.application import MIMEApplication
+
+    message = MIMEMultipart()
+    message['To'] = Header(receiver)
+    message['From']  = Header(sender)
+    message['Subject'] = Header(subject)
+    message.attach(MIMEText(email_message,'plain', 'utf-8'))
+    if attachment:
+        att = MIMEApplication(attachment.read(), _subtype="txt")
+        att.add_header('Content-Disposition', 'attachment', filename=attachment.name)
+        message.attach(att)
+
+    server = smtplib.SMTP(smtp_server, smtp_port)
+    server.starttls()
+    server.ehlo()
+    server.login(sender, password)
+    text = message.as_string()
+    server.sendmail(sender, receiver, text)
+    server.quit()
