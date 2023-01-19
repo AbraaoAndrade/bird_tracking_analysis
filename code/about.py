@@ -11,7 +11,7 @@ def about():
     st.markdown("""---""")
     col1, col2, col3 = st.columns([15,1,1])
     with col1:
-        st.markdown("Abraão Andrade — 18 Jan 2023 — 1 min leitura")
+        st.markdown("Abraão Andrade — 18 Jan 2023 — 2 min leitura")
     with col2:
         st.markdown("[![Title](https://img.icons8.com/ios-glyphs/30/null/github.png)](https://github.com/AbraaoAndrade/bird_tracking_analysis)")
     with col3:
@@ -44,7 +44,7 @@ def about():
         st.image("https://raw.githubusercontent.com/AbraaoAndrade/bird_tracking_analysis/main/images/tracking_process.png")
 
     st.markdown(markdown_template.format("""
-    Para realizar o rastreio desses animais foi utilizado um algoritmo de deleção de plano de fundo, que processava as informações de vídeo ao vivo durante 5 dias de experimentação com cada animal. Os dados resultantes desse processamento são centenas de arquivos CSV com valores de coordenadas e tempo:
+    Para realizar o rastreio desses animais foi utilizado um algoritmo de deleção de plano de fundo, que processava as informações de vídeo em tempo real durante 5 dias de experimentação com cada animal. Os dados resultantes desse processamento são centenas de arquivos CSV com valores de coordenadas e tempo:
     """), unsafe_allow_html=True)
     st.dataframe(pd.read_csv("https://raw.githubusercontent.com/AbraaoAndrade/bird_tracking_analysis/main/data/Or328_28-Sep-2019%2002_21_51.csv", names=['Taxa de Atualização (s)','Coordenada X (px)','Coordenada Y (px)','X','Hora','Minuto','Segundo']).head(), height=200)
     st.markdown(markdown_template.format("""
