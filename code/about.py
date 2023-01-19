@@ -1,7 +1,10 @@
-import streamlit as st
-import pandas as pd
 import sys
 sys.path.append("code")
+
+import streamlit as st
+import pandas as pd
+
+from utils import *
 
 def about():
     
