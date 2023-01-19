@@ -24,7 +24,7 @@ if 'layout' not in st.session_state:
     st.session_state['layout'] = "wide"
 
 st.set_page_config(page_title="HeatMap Plot",
-                   page_icon=":compass:",
+                   page_icon=":fire:",
                    layout= st.session_state.layout,
                    initial_sidebar_state="auto")
 
