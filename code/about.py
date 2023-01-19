@@ -35,7 +35,7 @@ def about():
     """), unsafe_allow_html=True)
     st.video('https://www.youtube.com/watch?v=eM_Fcy8uFNU')
     st.markdown(markdown_template.format("""
-    Esse trabalho me proporcionou o Prêmio de Trabalho Destaque de Iniciação Científica de 2020 e o recorte tratado nesse artigo faz parte do esforço de interpretar os resultados de um experimento de rastreio dessas aves, cujo objetivo, dentre eles, era avaliar a presença de comportamentos esteriotipados, característica comum nos Transtornos do Espectro Autista.
+    Esse trabalho me proporcionou o Prêmio de Trabalho Destaque de Iniciação Científica de 2020 e o recorte tratado nesse artigo faz parte do esforço de interpretar os resultados de um experimento de rastreio dessas aves, cujo objetivo, dentre eles, era avaliar a presença de comportamentos estereotipados, característica comum nos Transtornos do Espectro Autista.
     """), unsafe_allow_html=True)
 
     st.markdown("## Projeto")
@@ -50,7 +50,7 @@ def about():
     st.markdown(markdown_template.format("""
     O longo período de experimentação foi o que pautou a necessidade de um algoritmo de rastreio mais simples e, em contrapartida, tivemos que lidar com algumas deficiências do método. Dentre elas, inúmeros bugs de preenchimento de valores, perda do animal no rastreio, rastreio de artefatos, e todo esse tratamento foi realizado pós experimentação. Em meio a esse processo, para resolver os ruídos da aquisição  causados por artefatos, como acúmulo de ração, desenvolvemos uma interface para realizar essa limpeza manualmente:
     """), unsafe_allow_html=True)
-    st.info('Todas as etapas de limpeza dos dados estão presentes no link a seguir:', icon="ℹ️")
+    st.info('Todas as etapas de limpeza dos dados estão presentes no link a seguir: [link](https://github.com/AbraaoAndrade/bird_tracking_analysis/blob/main/preprocess_and_distance.ipynb)', icon="ℹ️")
     st.video("images/preprocess.mp4")
     st.markdown(markdown_template.format("""
     Finalmente, com os dados limpos podemos partir para as visualizações …
@@ -58,16 +58,16 @@ def about():
 
     st.markdown("#### Quantificação da distância Percorrida ")
 
-    st.image("images/distancia.png")
+    st.image("https://raw.githubusercontent.com/AbraaoAndrade/bird_tracking_analysis/main/images/distancia.png")
 
     st.markdown("#### Mapa de calor ")
-    st.image("images/heatmap.jpg")
+    st.image("https://raw.githubusercontent.com/AbraaoAndrade/bird_tracking_analysis/main/images/heatmap.jpg")
     st.markdown(markdown_template.format("""
     O mapa de calor é uma ferramenta de visualização espacial perfeita para representação de um perfil posicional do animal durante a experimentação. O animal apresentado acima, por exemplo, demonstrou uma preferência pelo poleiro esquerdo.
     """), unsafe_allow_html=True)
 
     st.markdown(markdown_template.format("""
-    É claro que as conclusões tiradas desses dados deverão passar por validações estatísticas, mas essas análises deixarei reservadas para as futuras publicações do laboratório.
+    As conclusões tiradas desses dados deverão passar por validações estatísticas, mas essas análises ficarão reservadas para as futuras publicações do laboratório.
     """), unsafe_allow_html=True)
 
     st.markdown("""---""")

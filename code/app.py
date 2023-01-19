@@ -33,20 +33,17 @@ def app():
 
         st.session_state.tracking_analysis_env.progress_bar = st.progress(0)
         
+        # st.session_state.tracking_analysis_env.checkbox_manual_light = st.checkbox("check light - manual input")
+        # if st.session_state.tracking_analysis_env.checkbox_manual_light:
+        #     range_date = st.date_input("range, no dates", [])
+        #     st.text((range_date[1]-range_date[0]).days)
+
         c1, c2, c3, c4, c5 = st.columns([2.4, 2.3, 1.3, 4, 16])
 
         if st.session_state.tracking_analysis_env.path != "":
             with c1:
                 button_submit = st.button("Submit Files")
-        # st.text(st.session_state.tracking_analysis_env.list_filenames) ###############################
-        # st.text((st.session_state.tracking_analysis_env.filter_file.empty) )
-        # st.text( (filter_file is not None))
-        # st.dataframe(st.session_state.tracking_analysis_env.filter_file.head())
-        # if st.session_state.tracking_analysis_env.list_filenames != None:
-        #     df = pd.read_csv(st.session_state.tracking_analysis_env.list_filenames[0])
-        #     st.dataframe(df.head())
 
-        # st.text(st.session_state.tracking_analysis_env.light_on) ###############################
         if st.session_state.tracking_analysis_env.list_filenames != None:
             with c2:
                 button_get_light = st.button("Check Light")

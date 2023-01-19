@@ -8,7 +8,7 @@ Essa ferramenta é parte do processamento de dados de um Doutorado desenvolvido 
     
 [![IMAGE ALT TEXT](http://img.youtube.com/vi/eM_Fcy8uFNU/0.jpg)](http://www.youtube.com/watch?v=eM_Fcy8uFNU "Video Title")
 
-Esse trabalho me proporcionou o Prêmio de Trabalho Destaque de Iniciação Científica de 2020 e o recorte tratado nesse artigo faz parte do esforço de interpretar os resultados de um experimento de rastreio dessas aves, cujo objetivo, dentre eles, era avaliar a presença de comportamentos esteriotipados, característica comum nos Transtornos do Espectro Autista.
+Esse trabalho me proporcionou o Prêmio de Trabalho Destaque de Iniciação Científica de 2020 e o recorte tratado nesse artigo faz parte do esforço de interpretar os resultados de um experimento de rastreio dessas aves, cujo objetivo, dentre eles, era avaliar a presença de comportamentos estereotipados, característica comum nos Transtornos do Espectro Autista.
     
 ## Projeto
 
@@ -30,5 +30,4 @@ Finalmente, com os dados limpos podemos partir para as visualizações …
 
 O mapa de calor é uma ferramenta de visualização espacial perfeita para representação de um perfil posicional do animal durante a experimentação. O animal apresentado acima, por exemplo, demonstrou uma preferência pelo poleiro esquerdo.
     
-É claro que as conclusões tiradas desses dados deverão passar por validações estatísticas, mas essas análises deixarei reservadas para as futuras publicações do laboratório.
-    
+As conclusões tiradas desses dados deverão passar por validações estatísticas, mas essas análises ficarão reservadas para as futuras publicações do laboratório.
